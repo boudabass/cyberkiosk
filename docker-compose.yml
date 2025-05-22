@@ -1,0 +1,66 @@
+# docker-compose.yml
+version: "3.8"
+
+services:
+  chrome:
+    image: browserless/chrome:1.61-chrome-stable
+    container_name: cyberkiosk-chrome
+    environment:
+      - DISPLAY=${DISPLAY:-:0}
+      - TZ=${TZ}
+      - CHROME_FLAGS=--kiosk --incognito --no-first-run --disable-translate --disable-sync --disable-background-networking --disable-default-apps --disable-extensions --disable-component-extensions-with-background-pages --disable-features=TranslateUI --disable-popup-blocking --disable-prompt-on-repost --disable-background-timer-throttling --disable-renderer-backgrounding --disable-device-discovery-notifications --disable-software-rasterizer --disable-logging --proxy-server=http://privoxy:8118
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - session_data:/home/chrome/Downloads
+      - asso_data:/home/chrome/Asso:ro
+    depends_on:
+      - privoxy
+      - webapp
+    networks:
+      - cyberkiosk_net
+
+  webapp:
+    build: ./webapp
+    container_name: cyberkiosk-webapp
+    environment:
+      - FLASK_ENV=production
+      - TZ=${TZ}
+      - SMTP_SERVER=${SMTP_SERVER}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - MAIL_FROM=${MAIL_FROM}
+      - MAIL_SUBJECT=${MAIL_SUBJECT}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+    volumes:
+      - session_data:/app/session
+      - asso_data:/app/asso:ro
+    ports:
+      - "${WEBAPP_PORT}:5000"
+    networks:
+      - cyberkiosk_net
+
+  privoxy:
+    image: cyclopszhao/privoxy:stable
+    container_name: cyberkiosk-privoxy
+    command: ["privoxy", "--no-daemon", "/etc/privoxy/config"]
+    ports:
+      - "8118:8118"
+    volumes:
+      - ./privoxy/config:/etc/privoxy/config
+    networks:
+      - cyberkiosk_net
+
+volumes:
+  session_data:
+    driver: local
+  asso_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${ASSO_PATH}
+      o: bind
+
+networks:
+  cyberkiosk_net:
+    driver: bridge
