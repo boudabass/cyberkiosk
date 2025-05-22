@@ -1,0 +1,15 @@
+# privoxy/config/user.action
+
+# Autoriser uniquement les domaines explicitement listés (whitelist stricte)
+{+block}
+/
+
+# Débloquer les sites autorisés (exemples) :
+{-block}
+*.service-public.fr/
+*.impots.gouv.fr/
+*.ameli.fr/
+*.franceconnect.gouv.fr/
+*.mesdemarches.gouv.fr/
+# Ajoutez ici d'autres domaines autorisés
+

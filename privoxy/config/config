@@ -1,0 +1,25 @@
+# privoxy/config/config
+
+confdir /etc/privoxy
+logdir /var/log/privoxy
+filterfile default.filter
+logfile logfile
+
+listen-address  0.0.0.0:8118
+
+# Inclure la whitelist dans user.action
+actionsfile user.action
+
+# Fichiers d’actions standards (nécessaires au fonctionnement de Privoxy)
+actionsfile default.action
+actionsfile standard.action
+
+# Fichiers de filtres standards
+filterfile default.filter
+
+# Sécurité : ne pas autoriser les requêtes proxy venant de l'extérieur
+accept-intercepted-requests 0
+toggle 1
+
+buffer-limit 4096
+

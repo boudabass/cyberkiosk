@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Administration - Whitelist Privoxy | Cyberkiosk</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f8f8f8; margin: 0; padding: 0; }
+        .container { max-width: 500px; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #ccc; padding: 24px; }
+        h1 { font-size: 1.5em; margin-bottom: 20px; }
+        ul { list-style: none; padding: 0; }
+        li { padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        form.inline { display: inline; }
+        .flash { background: #e0ffe0; color: #2a7a2a; padding: 8px; border-radius: 4px; margin-bottom: 16px; }
+        label { font-weight: bold; }
+        input[type="text"] { padding: 6px; width: 65%; margin-right: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 6px 14px; border: none; border-radius: 4px; background: #2a7a2a; color: #fff; cursor: pointer; }
+        button.remove { background: #c0392b; }
+        button:hover { opacity: 0.9; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Gestion de la whitelist Privoxy</h1>
+
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div class="flash">
+              {% for message in messages %}
+                {{ message }}
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <form method="post" autocomplete="off">
+            <label for="domain">Ajouter un domaine autorisé :</label><br>
+            <input type="text" id="domain" name="domain" placeholder="exemple.fr" required>
+            <button type="submit" name="action" value="add">Ajouter</button>
+        </form>
+
+        <h2 style="margin-top:30px;">Domaines actuellement autorisés</h2>
+        <ul>
+            {% for domain in whitelist %}
+            <li>
+                {{ domain }}
+                <form method="post" class="inline" style="margin:0;">
+                    <input type="hidden" name="domain" value="{{ domain }}">
+                    <button type="submit" name="action" value="remove" class="remove">Retirer</button>
+                </form>
+            </li>
+            {% else %}
+            <li>Aucun domaine autorisé pour l’instant.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</body>
+</html>
