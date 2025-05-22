@@ -1,87 +1,23 @@
 # Cyberkiosk
 
-**Projet de kiosque numérique sécurisé, éphémère et accessible, conçu pour l’association La Cybergrange.**
+**Solution de kiosque numérique sécurisé et éphémère pour l’association La Cybergrange**
 
 ---
 
 ## Présentation
 
-Cyberkiosk est une solution clé-en-main pour transformer n’importe quel PC sous Debian en borne d’accès Internet sécurisée, idéale pour les démarches administratives et l’accompagnement numérique.  
-Chaque session utilisateur est isolée, aucune donnée n’est conservée, et la navigation est strictement contrôlée.
+Cyberkiosk est une stack Docker Compose conçue pour transformer un PC sous Debian en une borne d’accès Internet sécurisée, simple à utiliser et adaptée aux démarches administratives.  
+Chaque session utilisateur est isolée et remise à zéro automatiquement, garantissant la confidentialité et la sécurité des données.
 
 ---
 
-## Fonctionnalités principales
+## Fonctionnalités clés
 
-- **Session éphémère** : remise à zéro complète après chaque utilisation (fichiers, historique, identifiants…)
-- **Navigation sécurisée** : accès uniquement à une liste blanche de sites autorisés via un proxy filtrant
-- **Webapp d’accueil** : gestion simple des fichiers téléchargés, documents de l’association, et envoi par mail
-- **Administration intégrée** : gestion de la liste blanche, redémarrage de session/machine, logs techniques
-- **Déploiement ultra-simple** : tout est orchestré via Docker Compose
-
----
-
-## Prérequis
-
-- PC sous **Debian stable** (préconisé : version minimale, sans interface graphique lourde)
-- **Docker Engine** installé (version récente recommandée)
-- Accès administrateur pour l’installation initiale
-- Compte Gmail dédié pour l’envoi des mails (avec mot de passe d’application)
-
----
-
-## Installation rapide
-
-1. **Préparation de l’hôte**
-   - Installez Docker :
-     ```
-     sudo apt update
-     sudo apt install docker.io
-     sudo systemctl enable --now docker
-     ```
-   - (Optionnel) Installez X11 ou Xvfb si besoin d’un affichage virtuel.
-
-2. **Création de l’utilisateur dédié**
-   - (optionnel mais recommandé)
-     ```
-     sudo useradd -m -G docker -s /bin/bash kiosk
-     sudo passwd kiosk
-     ```
-
-3. **Clonage du dépôt**
-git clone https://github.com/votre-asso/cyberkiosk.git
-cd cyberkiosk
-
-
-
-4. **Configuration**
-- Copiez et éditez le fichier `.env.example` en `.env` pour renseigner les paramètres SMTP et autres variables.
-- Placez les documents de l’association dans le dossier `asso/`.
-
-5. **Lancement de la stack**
-docker compose up -d
-
-
-
-6. **Accès**
-- Le navigateur Chromium s’ouvre en mode kiosk sur la webapp d’accueil.
-- Interface d’administration : http://localhost:5000/admin
-
----
-
-## Utilisation
-
-- **Pour les usagers**
-- Naviguez sur les sites autorisés depuis la page d’accueil
-- Téléchargez les documents nécessaires, ajoutez ceux de l’association
-- Envoyez-vous vos fichiers par mail en fin de session
-- À la fin, toutes les données sont effacées automatiquement
-
-- **Pour les administrateurs**
-- Gérez la liste blanche des sites accessibles
-- Ajoutez/supprimez des documents de l’association
-- Redémarrez une session ou la machine depuis l’interface admin
-- Accédez aux logs techniques pour le support
+- **Session éphémère** : remise à zéro complète après chaque utilisation (fichiers, historique, cache, identifiants).
+- **Navigation sécurisée** : accès limité à une liste blanche de sites via un proxy filtrant (Privoxy).
+- **Webapp d’accueil** : interface simple pour gérer les fichiers téléchargés, consulter les documents de l’association, et envoyer les fichiers par mail.
+- **Administration intégrée** : gestion dynamique de la liste blanche, redémarrage des sessions, accès aux logs.
+- **Déploiement facile** : tout est orchestré via Docker Compose avec des images dédiées pour Chromium, Flask et Privoxy.
 
 ---
 
@@ -90,50 +26,104 @@ docker compose up -d
 cyberkiosk/
 │
 ├── docker-compose.yml # Orchestration des services
-├── Dockerfile.chrome # Image du navigateur Chromium
-├── Dockerfile.webapp # Image de la webapp Flask
-├── Dockerfile.privoxy # Image du proxy filtrant
+├── .env.example # Exemple de variables d’environnement
+│
+├── chrome/ # Service Chromium
+│ ├── Dockerfile
+│ └── entrypoint.sh
+│
+├── webapp/ # Service Flask
+│ ├── Dockerfile
+│ ├── app/
+│ └── requirements.txt
+│
+├── privoxy/ # Service Privoxy
+│ ├── Dockerfile
+│ └── config/
+│ └── config
+│
 ├── asso/ # Documents de l’association (lecture seule)
-├── session/ # Volume éphémère pour les fichiers utilisateurs
-├── webapp/ # Code source de la webapp Flask
-├── privoxy/ # Configurations du proxy
-├── .env.example # Exemple de configuration SMTP et variables
+│
+├── session/ # Volume éphémère pour fichiers utilisateurs
+│
+├── scripts/ # Scripts d’installation et maintenance
+│
 └── README.md
 
-
-
----
-
-## Sécurité & bonnes pratiques
-
-- Isolation stricte des sessions utilisateur
-- Aucun accès root dans les conteneurs
-- Volumes Docker éphémères (aucune persistance de données sensibles)
-- Accès administrateur limité par authentification
-- Liste blanche dynamique et configurable
-- Conformité RGPD : aucune donnée personnelle conservée
+text
 
 ---
 
-## Dépannage
+## Prérequis
 
-- **Redémarrer la stack** :  
-docker compose down && docker compose up -d
+- PC sous Debian stable (recommandé pour compatibilité et légèreté)
+- Docker Engine installé (version récente)
+- Accès administrateur pour l’installation initiale
+- Compte Gmail dédié avec mot de passe d’application pour l’envoi des mails
 
+---
 
-- **Consulter les logs** :  
-docker compose logs
+## Installation rapide
 
+1. Installer Docker sur la machine hôte.
+2. Créer un utilisateur dédié (optionnel mais recommandé).
+3. Cloner ce dépôt :
+git clone https://github.com/boudabass/cyberkiosk.git
+cd cyberkiosk
 
-- **Réinitialiser la configuration** :  
-Supprimez le dossier `session/` et relancez la stack.
+text
+4. Copier `.env.example` en `.env` et renseigner les variables (SMTP, ports, etc.).
+5. Placer les documents de l’association dans le dossier `asso/`.
+6. Lancer la stack :
+docker compose up -d
+
+text
+7. Le navigateur s’ouvre automatiquement en mode kiosk sur la webapp d’accueil.
+
+---
+
+## Utilisation
+
+- **Pour les usagers** :  
+Naviguer uniquement sur les sites autorisés, gérer les fichiers téléchargés, envoyer les documents par mail, puis quitter la session qui sera automatiquement réinitialisée.
+
+- **Pour les administrateurs** :  
+Gérer la liste blanche des sites, les documents de l’association, redémarrer les sessions ou la machine, consulter les logs via l’interface d’administration.
+
+---
+
+## Variables d’environnement
+
+Les principales variables à configurer dans `.env` :
+
+- `SMTP_SERVER`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` : pour la configuration de l’envoi mail via Gmail.
+- Ports exposés pour chaque service.
+- Chemins des volumes (optionnel).
+
+---
+
+## Sécurité
+
+- Isolation complète des sessions via Docker et volumes éphémères.
+- Pas de données persistantes utilisateur en dehors de la session active.
+- Conteneurs non privilégiés, volumes en lecture seule quand possible.
+- Proxy filtrant pour limiter la navigation aux sites autorisés.
+- Authentification sur l’interface d’administration.
+
+---
+
+## Maintenance
+
+- Scripts disponibles dans `scripts/` pour installation, reset de session, mises à jour.
+- Logs accessibles via Docker Compose.
+- Mise à jour des images Docker par simple pull et redémarrage.
 
 ---
 
 ## Contribution
 
-Toute aide est la bienvenue !  
-Merci de proposer vos améliorations via des issues ou pull requests.
+Contributions, suggestions et rapports de bugs sont les bienvenus !  
+Merci de passer par les issues ou pull requests.
 
 ---
 
@@ -143,5 +133,10 @@ Projet open source sous licence MIT.
 
 ---
 
-🤝 Remerciements
-Merci à tous les bénévoles et toute l'équipe de La Cybergrange et à la communauté du libre pour leur soutien et leurs retours !
+## Contact
+
+Pour toute question ou support, contactez l’association La Cybergrange.
+
+---
+
+*Merci de contribuer à réduire la fracture numérique avec Cyberkiosk !*
