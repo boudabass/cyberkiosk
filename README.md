@@ -21,37 +21,6 @@ Chaque session utilisateur est isolée et remise à zéro automatiquement, garan
 
 ---
 
-## Structure du projet
-
-cyberkiosk/
-│
-├── docker-compose.yml # Orchestration des services
-├── .env.example # Exemple de variables d’environnement
-│
-├── chrome/ # Service Chromium
-│ ├── Dockerfile
-│ └── entrypoint.sh
-│
-├── webapp/ # Service Flask
-│ ├── Dockerfile
-│ ├── app/
-│ └── requirements.txt
-│
-├── privoxy/ # Service Privoxy
-│ ├── Dockerfile
-│ └── config/
-│ └── config
-│
-├── asso/ # Documents de l’association (lecture seule)
-│
-├── session/ # Volume éphémère pour fichiers utilisateurs
-│
-├── scripts/ # Scripts d’installation et maintenance
-│
-└── README.md
-
-text
-
 ---
 
 ## Prérequis
@@ -70,14 +39,10 @@ text
 3. Cloner ce dépôt :
 git clone https://github.com/boudabass/cyberkiosk.git
 cd cyberkiosk
-
-text
 4. Copier `.env.example` en `.env` et renseigner les variables (SMTP, ports, etc.).
 5. Placer les documents de l’association dans le dossier `asso/`.
 6. Lancer la stack :
 docker compose up -d
-
-text
 7. Le navigateur s’ouvre automatiquement en mode kiosk sur la webapp d’accueil.
 
 ---
@@ -131,12 +96,3 @@ Merci de passer par les issues ou pull requests.
 
 Projet open source sous licence MIT.
 
----
-
-## Contact
-
-Pour toute question ou support, contactez l’association La Cybergrange.
-
----
-
-*Merci de contribuer à réduire la fracture numérique avec Cyberkiosk !*
