@@ -1,0 +1,7 @@
+# Minimal match-all.action for Privoxy
+#
+# You can add your own match-all actions here.
+
+{ }
+/
+

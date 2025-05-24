@@ -1,0 +1,8 @@
+# Minimal default.filter for Privoxy
+#
+# This file is intentionally left almost empty.
+# You can add your own filtering rules here.
+
+FILTER: example-filter Example filter (does nothing)
+s/foo/bar/
+

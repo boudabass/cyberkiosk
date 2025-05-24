@@ -1,16 +1,39 @@
-
 services:
+
   chrome:
-    image: browserless/chrome:1.61-chrome-stable
+    image: andrewmackrodt/chromium-x11:latest
     container_name: cyberkiosk-chrome
+    privileged: true
     environment:
-      - DISPLAY=${DISPLAY:-:0}
+      - DISPLAY=${DISPLAY}
       - TZ=${TZ}
-      - CHROME_FLAGS=--kiosk --incognito --no-first-run --disable-translate --disable-sync --disable-background-networking --disable-default-apps --disable-extensions --disable-component-extensions-with-background-pages --disable-features=TranslateUI --disable-popup-blocking --disable-prompt-on-repost --disable-background-timer-throttling --disable-renderer-backgrounding --disable-device-discovery-notifications --disable-software-rasterizer --disable-logging --proxy-server=http://privoxy:8118
+      - HTTP_PROXY=http://privoxy:8118
+      - HTTPS_PROXY=http://privoxy:8118
+      - NO_PROXY=cyberkiosk-webapp,localhost,127.0.0.1
+    command: >
+      --no-sandbox
+      --kiosk
+      --incognito
+      --no-first-run
+      --disable-translate
+      --disable-sync
+      --disable-background-networking
+      --disable-default-apps
+      --disable-extensions
+      --disable-component-extensions-with-background-pages
+      --disable-features=TranslateUI
+      --disable-popup-blocking
+      --disable-prompt-on-repost
+      --disable-background-timer-throttling
+      --disable-renderer-backgrounding
+      --disable-device-discovery-notifications
+      --disable-software-rasterizer
+      --disable-logging
+      http://cyberkiosk-webapp:5000
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
-      - session_data:/home/chrome/Downloads
-      - asso_data:/home/chrome/Asso:ro
+      - session_data:/data
+      - asso_data:/home/ubuntu/Asso:ro
     depends_on:
       - privoxy
       - webapp
@@ -31,6 +54,7 @@ services:
       - MAIL_SUBJECT=${MAIL_SUBJECT}
       - ALLOWED_HOSTS=${ALLOWED_HOSTS}
     volumes:
+      - ./privoxy/config:/app/privoxy
       - session_data:/app/session
       - asso_data:/app/asso:ro
     ports:
@@ -38,7 +62,7 @@ services:
     networks:
       - cyberkiosk_net
 
- privoxy:
+  privoxy:
     build: ./privoxy
     container_name: cyberkiosk-privoxy
     ports:
@@ -61,3 +85,4 @@ volumes:
 networks:
   cyberkiosk_net:
     driver: bridge
+

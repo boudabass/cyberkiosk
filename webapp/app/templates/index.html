@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Cyberkiosk - Accueil</title>
+</head>
+<body>
+    <h1>Bienvenue sur Cyberkiosk</h1>
+    <h2>Sites autorisés</h2>
+    {% if whitelist %}
+        <ul>
+        {% for domain in whitelist %}
+            <li>
+                <a href="https://{{ domain }}" target="_blank" rel="noopener noreferrer">{{ domain }}</a>
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>Aucun site autorisé pour le moment.</p>
+    {% endif %}
+</body>
+</html>
+
