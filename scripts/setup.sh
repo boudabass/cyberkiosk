@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "=== [Cyberkiosk] Installation initiale ==="
+echo "=== [Cyberkiosk] Installation et Configuration ==="
 
 # Vérification des droits root
 if [ "$EUID" -ne 0 ]; then
@@ -9,54 +9,105 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
-# Vérification de la présence de git
-if ! command -v git &> /dev/null; then
-  echo "[*] Installation de git..."
-  apt update
-  apt install -y git
+# Détection de la distribution (Debian ou Ubuntu)
+if [ -f /etc/os-release ]; then
+  . /etc/os-release
+  DISTRO_ID=$ID
+  DISTRO_CODENAME=${UBUNTU_CODENAME:-$VERSION_CODENAME}
+else
+  echo "Impossible de détecter la distribution (fichier /etc/os-release manquant)."
+  exit 1
 fi
 
-# Installation de Docker si absent
+# Mise à jour et installation des prérequis
+apt update
+apt install -y git xorg ca-certificates curl gnupg lsb-release
+
+# Installation officielle de Docker Engine et Docker Compose
 if ! command -v docker &> /dev/null; then
-  echo "[*] Installation de Docker..."
+  install -m 0755 -d /etc/apt/keyrings
+  if [ "$DISTRO_ID" = "ubuntu" ]; then
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+      $DISTRO_CODENAME stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+  elif [ "$DISTRO_ID" = "debian" ]; then
+    curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
+      $DISTRO_CODENAME stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+  else
+    echo "Distribution non supportée : $DISTRO_ID"
+    exit 1
+  fi
+  chmod a+r /etc/apt/keyrings/docker.asc
   apt update
-  apt install -y docker.io
-  systemctl enable --now docker
+  apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 fi
 
-# Création d'un utilisateur dédié (optionnel mais recommandé)
-read -p "Créer un utilisateur dédié 'kiosk' ? [O/n] " create_user
-if [[ "$create_user" =~ ^[Oo]$ || -z "$create_user" ]]; then
-  id kiosk &>/dev/null || useradd -m -G docker -s /bin/bash kiosk
-  passwd kiosk
-  echo "[*] L'utilisateur 'kiosk' a été ajouté au groupe docker."
-  echo "    Déconnectez-vous puis reconnectez-vous pour appliquer les droits."
+# Création de l'utilisateur kiosk si absent
+if ! id kiosk &>/dev/null; then
+  useradd -m -G docker -s /bin/bash kiosk
+  passwd -d kiosk
+  echo "[*] L'utilisateur 'kiosk' a été créé."
 fi
 
-# Installation de X11 (si nécessaire)
-if ! dpkg -l | grep -q xorg; then
-  echo "[*] Installation de X11..."
-  apt install -y xorg
-fi
-
-echo "=== [Cyberkiosk] Clonage du dépôt ==="
+# Clonage du dépôt Cyberkiosk
 if [ ! -d /opt/cyberkiosk ]; then
   git clone https://github.com/boudabass/cyberkiosk.git /opt/cyberkiosk
+  chown -R kiosk:kiosk /opt/cyberkiosk
 fi
 
-echo "=== [Cyberkiosk] Préparation des dossiers ==="
+# Préparation des dossiers (si besoin)
 mkdir -p /opt/cyberkiosk/asso
 chown -R kiosk:kiosk /opt/cyberkiosk
 
-echo "=== Installation terminée ==="
-echo "Connectez-vous avec l'utilisateur 'kiosk' pour lancer la stack."
+# === Configuration initiale du .env ===
+cd /opt/cyberkiosk
+if [ ! -f .env ]; then
+  cp .env.example .env
+  chown kiosk:kiosk .env
+  echo "[*] Fichier .env créé. Veuillez le configurer avec vos informations."
 
-# Demande de confirmation avant redémarrage
-read -p "Redémarrer le système maintenant pour finaliser l'installation ? [O/n] " reboot_now
-if [[ "$reboot_now" =~ ^[Oo]$ || -z "$reboot_now" ]]; then
-  echo "[*] Redémarrage du système..."
-  reboot
-else
-  echo "[*] Redémarrage annulé. Pensez à redémarrer manuellement avant d'utiliser la stack."
+  # Proposer des valeurs par défaut
+  read -p "Entrez le serveur SMTP [smtp.gmail.com] : " smtp_server
+  smtp_server=${smtp_server:-smtp.gmail.com}
+  sed -i "s|SMTP_SERVER=.*|SMTP_SERVER=$smtp_server|" .env
+
+  read -p "Entrez le port SMTP [587] : " smtp_port
+  smtp_port=${smtp_port:-587}
+  sed -i "s|SMTP_PORT=.*|SMTP_PORT=$smtp_port|" .env
+
+  read -p "Entrez l'utilisateur SMTP [demo@demo.com] : " smtp_user
+  smtp_user=${smtp_user:-demo@demo.com}
+  sed -i "s|SMTP_USER=.*|SMTP_USER=$smtp_user|" .env
+
+  read -p "Entrez le mot de passe SMTP : " smtp_password
+  sed -i "s|SMTP_PASSWORD=.*|SMTP_PASSWORD=$smtp_password|" .env
 fi
 
+# Création du dossier autostart si inexistant
+sudo -u kiosk mkdir -p /home/kiosk/.config/autostart
+
+# Création du fichier .desktop pour lancer start.sh au login graphique
+cat << EOF > /home/kiosk/.config/autostart/cyberkiosk-start.desktop
+[Desktop Entry]
+Type=Application
+Exec=/opt/cyberkiosk/scripts/start.sh
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Name=Cyberkiosk Start
+Comment=Lance la stack Cyberkiosk au démarrage de la session
+EOF
+
+chown kiosk:kiosk /home/kiosk/.config/autostart/cyberkiosk-start.desktop
+chmod +x /opt/cyberkiosk/scripts/start.sh
+
+echo "=== Installation terminée ==="
+echo "Redémarrez et connectez-vous en tant que 'kiosk' : la stack Cyberkiosk démarrera automatiquement."
+
+read -p "Redémarrer le système maintenant ? [O/n] " reboot_now
+if [[ "$reboot_now" =~ ^[Oo]$ || -z "$reboot_now" ]]; then
+  reboot
+fi
