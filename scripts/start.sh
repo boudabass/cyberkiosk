@@ -1,49 +1,41 @@
 #!/bin/bash
 set -e
 
-cd "$(dirname "$0")/.."
-
-# Vérification que Docker est lancé
-if ! systemctl is-active --quiet docker; then
-  echo "[!] Le service Docker n'est pas démarré. Veuillez le lancer avec : sudo systemctl start docker"
+# S'assurer que le script est lancé par l'utilisateur kiosk
+if [ "$(whoami)" != "kiosk" ]; then
+  echo "Ce script doit être exécuté en tant qu'utilisateur 'kiosk'."
   exit 1
 fi
 
-# Vérification de la présence de .env
+cd /opt/cyberkiosk
+
+# Vérification de la présence du .env
 if [ ! -f .env ]; then
-  if [ -f .env.example ]; then
-    echo "[*] Fichier .env absent, création depuis .env.example"
-    cp .env.example .env
-  else
-    echo "[!] Fichier .env et .env.example absents. Impossible de continuer."
-    exit 1
-  fi
+  echo "[!] Le fichier .env est absent. Merci de contacter l'administrateur."
+  exit 1
 fi
 
-# Mise à jour ou ajout de la variable DISPLAY dans .env
-if [ -z "$DISPLAY" ]; then
-  echo "[!] La variable DISPLAY n'est pas définie dans l'environnement courant."
-  echo "    Le navigateur ne pourra pas s'afficher graphiquement."
-else
+# Mise à jour de la variable DISPLAY dans .env si besoin
+if [ -n "$DISPLAY" ]; then
   if grep -q '^DISPLAY=' .env; then
     sed -i "s|^DISPLAY=.*|DISPLAY=$DISPLAY|" .env
-    echo "[*] Variable DISPLAY mise à jour dans .env : $DISPLAY"
   else
     echo "DISPLAY=$DISPLAY" >> .env
-    echo "[*] Variable DISPLAY ajoutée à .env : $DISPLAY"
   fi
 fi
 
-# Autorisation d'accès X11 pour les conteneurs Docker
+# Autorisation d'accès X11 pour Docker
 if command -v xhost &> /dev/null; then
-  echo "[*] Autorisation d'accès X11 pour Docker (xhost +local:docker)..."
   xhost +local:docker
-else
-  echo "[!] La commande xhost n'est pas disponible. L'affichage graphique risque de ne pas fonctionner."
 fi
 
-echo "=== [Cyberkiosk] Lancement de la stack ==="
+# Lancement de la stack Docker Compose
+echo "[*] Lancement de la stack Cyberkiosk..."
 docker compose up -d
 
-echo "La stack Cyberkiosk est démarrée."
-
+if [ $? -eq 0 ]; then
+  echo "[*] Stack Cyberkiosk démarrée avec succès."
+else
+  echo "[!] Erreur lors du démarrage de la stack Cyberkiosk."
+  exit 1
+fi
