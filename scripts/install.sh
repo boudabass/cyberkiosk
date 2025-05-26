@@ -9,16 +9,7 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
-# Vérification et installation des prérequis
-for pkg in git xorg; do
-  if ! dpkg -l | grep -q $pkg; then
-    echo "[*] Installation de $pkg..."
-    apt update
-    apt install -y $pkg
-  fi
-done
-
-# Vérification et installation des prérequis (hors Docker)
+# Installation des prérequis
 for pkg in git xorg; do
   if ! dpkg -l | grep -q $pkg; then
     echo "[*] Installation de $pkg..."
@@ -112,8 +103,16 @@ if command -v xhost &> /dev/null; then
   xhost +local:docker
 fi
 
-# Configuration pour démarrer le navigateur à la connexion de 'kiosk'
-echo "docker compose -f /opt/cyberkiosk/docker-compose.yml up -d" >> /home/kiosk/.bashrc
+# Ajout du démarrage automatique de la stack dans le profil de l'utilisateur kiosk
+KIOSK_PROFILE="/home/kiosk/.bash_profile"
+STACK_CMD="docker compose -f /opt/cyberkiosk/docker-compose.yml up -d"
+if ! grep -Fxq "$STACK_CMD" "$KIOSK_PROFILE"; then
+  echo "" >> "$KIOSK_PROFILE"
+  echo "# Démarrage automatique de la stack Cyberkiosk" >> "$KIOSK_PROFILE"
+  echo "$STACK_CMD" >> "$KIOSK_PROFILE"
+  chown kiosk:kiosk "$KIOSK_PROFILE"
+  echo "[*] Ajout du démarrage automatique de la stack dans $KIOSK_PROFILE"
+fi
 
 # Redémarrage du système
 read -p "Redémarrer le système maintenant pour finaliser l'installation ? [O/n] " reboot_now
