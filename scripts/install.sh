@@ -103,12 +103,19 @@ if command -v xhost &> /dev/null; then
   xhost +local:docker
 fi
 
-# Ajout du démarrage automatique de la stack dans le profil de l'utilisateur kiosk
-KIOSK_PROFILE="/home/kiosk/.bash_profile"
-STACK_CMD="docker compose -f /opt/cyberkiosk/docker-compose.yml up -d"
-if ! grep -Fxq "$STACK_CMD" "$KIOSK_PROFILE"; then
+# Ajout du démarrage automatique de la stack dans .profile de l'utilisateur kiosk
+KIOSK_PROFILE="/home/kiosk/.profile"
+STACK_CMD='
+# Démarrage automatique de la stack Cyberkiosk
+if command -v docker &>/dev/null && docker info >/dev/null 2>&1; then
+  if ! docker compose -f /opt/cyberkiosk/docker-compose.yml ps | grep -q "Up"; then
+    docker compose -f /opt/cyberkiosk/docker-compose.yml up -d
+  fi
+fi
+'
+
+if ! grep -q "Cyberkiosk" "$KIOSK_PROFILE"; then
   echo "" >> "$KIOSK_PROFILE"
-  echo "# Démarrage automatique de la stack Cyberkiosk" >> "$KIOSK_PROFILE"
   echo "$STACK_CMD" >> "$KIOSK_PROFILE"
   chown kiosk:kiosk "$KIOSK_PROFILE"
   echo "[*] Ajout du démarrage automatique de la stack dans $KIOSK_PROFILE"
