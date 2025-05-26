@@ -3,6 +3,7 @@ services:
   chrome:
     image: andrewmackrodt/chromium-x11:latest
     container_name: cyberkiosk-chrome
+    restart: always
     privileged: true
     environment:
       - DISPLAY=${DISPLAY}
