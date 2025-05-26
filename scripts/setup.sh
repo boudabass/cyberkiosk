@@ -21,7 +21,7 @@ fi
 
 # Mise à jour et installation des prérequis
 apt update
-apt install -y git xorg ca-certificates curl gnupg lsb-release
+apt install -y git xorg ca-certificates curl gnupg lsb-release gnome-terminal
 
 # Installation officielle de Docker Engine et Docker Compose
 if ! command -v docker &> /dev/null; then
@@ -89,23 +89,29 @@ fi
 # Création du dossier autostart si inexistant
 sudo -u kiosk mkdir -p /home/kiosk/.config/autostart
 
-# Création du fichier .desktop pour lancer start.sh au login graphique
-cat << EOF > /home/kiosk/.config/autostart/cyberkiosk-start.desktop
+# Création du fichier .desktop pour lancer start.sh dans un terminal graphique au login
+cat << 'EOF' > /home/kiosk/.config/autostart/cyberkiosk-start.desktop
 [Desktop Entry]
 Type=Application
-Exec=/opt/cyberkiosk/scripts/start.sh
+Exec=gnome-terminal -- bash -c "/opt/cyberkiosk/scripts/start.sh; exec bash"
 Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
 Name=Cyberkiosk Start
-Comment=Lance la stack Cyberkiosk au démarrage de la session
+Comment=Lance la stack Cyberkiosk au démarrage de la session dans un terminal
 EOF
 
 chown kiosk:kiosk /home/kiosk/.config/autostart/cyberkiosk-start.desktop
 chmod +x /opt/cyberkiosk/scripts/start.sh
 
+# Ajout de la redirection des logs au début de start.sh si absent
+START_SH="/opt/cyberkiosk/scripts/start.sh"
+if ! grep -q "exec > /tmp/cyberkiosk.log 2>&1" "$START_SH"; then
+  sed -i '1iexec > /tmp/cyberkiosk.log 2>&1' "$START_SH"
+fi
+
 echo "=== Installation terminée ==="
-echo "Redémarrez et connectez-vous en tant que 'kiosk' : la stack Cyberkiosk démarrera automatiquement."
+echo "Redémarrez et connectez-vous en tant que 'kiosk' : la stack Cyberkiosk démarrera automatiquement dans un terminal, et les logs seront disponibles dans /tmp/cyberkiosk.log."
 
 read -p "Redémarrer le système maintenant ? [O/n] " reboot_now
 if [[ "$reboot_now" =~ ^[Oo]$ || -z "$reboot_now" ]]; then
