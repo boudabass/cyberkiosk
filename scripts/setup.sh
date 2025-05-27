@@ -45,11 +45,12 @@ if ! command -v docker &> /dev/null; then
   apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 fi
 
-# Création de l'utilisateur kiosk si absent
 if ! id kiosk &>/dev/null; then
   useradd -m -G docker -s /bin/bash kiosk
   passwd -d kiosk
   echo "[*] L'utilisateur 'kiosk' a été créé."
+else
+  usermod -aG docker kiosk
 fi
 
 # Clonage du dépôt Cyberkiosk
@@ -117,3 +118,8 @@ read -p "Redémarrer le système maintenant ? [O/n] " reboot_now
 if [[ "$reboot_now" =~ ^[Oo]$ || -z "$reboot_now" ]]; then
   reboot
 fi
+
+echo "=== Installation terminée ==="
+echo "Redémarrez et connectez-vous en tant que 'kiosk' : la stack Cyberkiosk démarrera automatiquement dans un terminal, et les logs seront disponibles dans /tmp/cyberkiosk.log."
+echo "ATTENTION : Ne jamais ouvrir de session graphique root !"
+echo "Connectez-vous uniquement en tant que 'kiosk' pour utiliser Cyberkiosk."
