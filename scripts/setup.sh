@@ -23,7 +23,7 @@ fi
 apt update
 apt install -y git xorg ca-certificates curl gnupg lsb-release gnome-terminal
 
-# Installation officielle de Docker Engine et Docker Compose
+# Installation officielle de Docker Engine et Docker Compose V2
 if ! command -v docker &> /dev/null; then
   install -m 0755 -d /etc/apt/keyrings
   if [ "$DISTRO_ID" = "ubuntu" ]; then
@@ -42,7 +42,16 @@ if ! command -v docker &> /dev/null; then
   fi
   chmod a+r /etc/apt/keyrings/docker.asc
   apt update
-  apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+  apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin
+fi
+
+# Installation ou mise à jour explicite du plugin Docker Compose V2
+apt install -y docker-compose-plugin
+
+# Vérification de la présence de docker compose V2
+if ! docker compose version &>/dev/null; then
+  echo "Erreur : Docker Compose V2 n'est pas installé correctement !"
+  exit 1
 fi
 
 if ! id kiosk &>/dev/null; then
