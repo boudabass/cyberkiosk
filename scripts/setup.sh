@@ -43,11 +43,8 @@ if ! command -v docker &> /dev/null; then
   fi
   chmod a+r /etc/apt/keyrings/docker.asc
   apt update
-  apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin
+  apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 fi
-
-# Installation ou mise à jour explicite du plugin Docker Compose V2
-apt install -y docker-compose-plugin
 
 if ! id kiosk &>/dev/null; then
   useradd -m -G docker -s /bin/bash kiosk
@@ -61,11 +58,13 @@ fi
 if [ ! -d /opt/cyberkiosk ]; then
   git clone https://github.com/boudabass/cyberkiosk.git /opt/cyberkiosk
   chown -R kiosk:kiosk /opt/cyberkiosk
+  echo "Le depôt Cyberkiosk a été clonée."
 fi
 
 # Préparation des dossiers (si besoin)
 mkdir -p /opt/cyberkiosk/asso
 chown -R kiosk:kiosk /opt/cyberkiosk
+echo "Les dossiers asso on été créé."
 
 # === Configuration initiale du .env ===
 cd /opt/cyberkiosk
