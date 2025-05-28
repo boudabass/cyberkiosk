@@ -122,13 +122,10 @@ fi
 
 echo "=== Installation terminée ==="
 echo "Redémarrez et connectez-vous en tant que 'kiosk' : la stack Cyberkiosk démarrera automatiquement dans un terminal, et les logs seront disponibles dans /tmp/cyberkiosk.log."
+echo "ATTENTION : Ne jamais ouvrir de session graphique root !"
+echo "Connectez-vous uniquement en tant que 'kiosk' pour utiliser Cyberkiosk."
 
 read -p "Redémarrer le système maintenant ? [O/n] " reboot_now
 if [[ "$reboot_now" =~ ^[Oo]$ || -z "$reboot_now" ]]; then
   reboot
 fi
-
-echo "=== Installation terminée ==="
-echo "Redémarrez et connectez-vous en tant que 'kiosk' : la stack Cyberkiosk démarrera automatiquement dans un terminal, et les logs seront disponibles dans /tmp/cyberkiosk.log."
-echo "ATTENTION : Ne jamais ouvrir de session graphique root !"
-echo "Connectez-vous uniquement en tant que 'kiosk' pour utiliser Cyberkiosk."
