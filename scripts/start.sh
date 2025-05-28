@@ -31,7 +31,7 @@ fi
 
 # Lancement de la stack Docker Compose
 echo "[*] Lancement de la stack Cyberkiosk..."
-docker compose up -d
+docker-compose up -d
 
 if [ $? -eq 0 ]; then
   echo "[*] Stack Cyberkiosk démarrée avec succès."
