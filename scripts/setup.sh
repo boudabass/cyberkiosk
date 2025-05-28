@@ -49,12 +49,6 @@ fi
 # Installation ou mise à jour explicite du plugin Docker Compose V2
 apt install -y docker-compose-plugin
 
-# Vérification de la présence de docker compose V2
-if ! docker compose version &>/dev/null; then
-  echo "Erreur : Docker Compose V2 n'est pas installé correctement !"
-  exit 1
-fi
-
 if ! id kiosk &>/dev/null; then
   useradd -m -G docker -s /bin/bash kiosk
   passwd -d kiosk
