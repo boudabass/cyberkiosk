@@ -26,13 +26,12 @@ Chaque session utilisateur est isolée et remise à zéro automatiquement, garan
 ## Prérequis
 
 - PC sous Debian stable (recommandé pour compatibilité et légèreté)
-- Docker Engine installé (version récente)
 - Accès administrateur pour l’installation initiale
 - Compte Gmail dédié avec mot de passe d’application pour l’envoi des mails
 
 ---
 
-## Installation rapide
+## Installation rapide script "install.sh"
 
 1. Installer Docker sur la machine hôte.
 2. Créer un utilisateur dédié (optionnel mais recommandé).
@@ -41,8 +40,7 @@ git clone https://github.com/boudabass/cyberkiosk.git
 cd cyberkiosk
 4. Copier `.env.example` en `.env` et renseigner les variables (SMTP, ports, etc.).
 5. Placer les documents de l’association dans le dossier `asso/`.
-6. Lancer la stack :
-docker compose up -d
+6. Lancement de la stack.
 7. Le navigateur s’ouvre automatiquement en mode kiosk sur la webapp d’accueil.
 
 ---
@@ -61,7 +59,10 @@ Gérer la liste blanche des sites, les documents de l’association, redémarrer
 
 Les principales variables à configurer dans `.env` :
 
-- `SMTP_SERVER`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` : pour la configuration de l’envoi mail via Gmail.
+- `SMTP_SERVER`,
+- `SMTP_PORT`,
+- `SMTP_USER`,
+- `SMTP_PASSWORD` : pour la configuration de l’envoi mail via Gmail.
 - Ports exposés pour chaque service.
 - Chemins des volumes (optionnel).
 
